@@ -15,9 +15,10 @@ def encrypt(plaintext, secret_key, mode):
 def decrypt(ciphertext, secret_key, mode):
     decoded = base64.b64decode(ciphertext.encode())
     cipher = AES.new(secret_key, mode)
-    
+
     decrypted = cipher.decrypt(decoded)
     return decrypted.rstrip(bytes([decrypted[-1]])).decode()
+
 
 def main():
     plaintext = input("Enter plaintext: ")
@@ -43,24 +44,29 @@ def main():
 
         save = input("Save to file (Y/N): ").upper()
         if save == 'Y':
-            file_path = input("Enter file path: ")
+            file_name = input("Enter file name: ")
+            file_path = './{}.txt'.format(file_name)
 
-            with open(file_path, 'w') as f:
-                f.write(ciphertext)
+        with open(file_path, 'w') as f:
+            f.write(ciphertext)
 
         print("Ciphertext:", ciphertext)
 
     else:
         read = input("Read from file (Y/N): ").upper()
         if read == 'Y':
-            file_path = input("Enter file path: ")
+            file_name = input("Enter file name: ")
+            file_path = './{}.txt'.format(file_name)
 
-            with open(file_path, 'r') as f:ciphertext = f.read()
+            with open(file_path, 'r') as f:
+                ciphertext = f.read()
+
         else:
             ciphertext = input("Enter ciphertext: ")
 
         plaintext = decrypt(ciphertext, secret_key, mode)
-    print("Plaintext:", plaintext)
+        print("Plaintext:", plaintext)
+
 
 
 if __name__ == '__main__':
