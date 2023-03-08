@@ -1,2 +1,2 @@
 # AES-Encryption
-Encryption/Decryption system with Advanced Encryption Standard alogrithm in python that uses pycryptodome library. 
+Encryption/Decryption system with Advanced Encryption Standard (AES) alogrithm in python that uses pycryptodome library. 
