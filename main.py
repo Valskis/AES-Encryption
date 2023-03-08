@@ -1,23 +1,46 @@
 import base64
+import binascii
+import random
 from Crypto.Cipher import AES
 
 
 def encrypt(plaintext, secret_key, mode):
+    # Generate a random IV for CBC mode
+    iv = bytes([random.randint(0, 255) for i in range(16)])
+
+    # Pad plaintext to a multiple of 16 bytes
     pad = 16 - len(plaintext) % 16
     plaintext = plaintext + pad * chr(pad)
 
-    cipher = AES.new(secret_key, mode)
+    cipher = AES.new(secret_key, mode, iv)
 
     encrypted = cipher.encrypt(plaintext.encode())
-    return base64.b64encode(encrypted).decode()
+    # Concatenate the IV and ciphertext
+    return base64.b64encode(iv + encrypted).decode()
+
 
 
 def decrypt(ciphertext, secret_key, mode):
-    decoded = base64.b64decode(ciphertext.encode())
-    cipher = AES.new(secret_key, mode)
+    try:
+        decoded = base64.b64decode(ciphertext.encode())
+    except binascii.Error:
+        print("Error: Could not decode ciphertext")
+        return ""
+    # Extract the IV from the beginning of the decoded ciphertext
+    iv = decoded[:16]
+    cipher = AES.new(secret_key, mode, iv)
 
-    decrypted = cipher.decrypt(decoded)
-    return decrypted.rstrip(bytes([decrypted[-1]])).decode()
+    try:
+        # Decrypt the ciphertext
+        decrypted = cipher.decrypt(decoded[16:])
+        # Remove padding
+        return decrypted[:-decrypted[-1]].decode()
+    except UnicodeDecodeError:
+        print("Error: Could not decode plaintext")
+        return ""
+    except ValueError:
+        print("Error: Incorrect secret key")
+        return ""
 
 
 def main():
