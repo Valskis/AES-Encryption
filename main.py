@@ -5,19 +5,22 @@ from Crypto.Cipher import AES
 
 
 def encrypt(plaintext, secret_key, mode):
-    # Generate a random IV for CBC mode
-    iv = bytes([random.randint(0, 255) for i in range(16)])
+    if mode == AES.MODE_ECB:
+        cipher = AES.new(secret_key, mode)
+        iv = b''
+    else:
+        iv = bytes([random.randint(0, 255) for i in range(16)])
+        cipher = AES.new(secret_key, mode, iv)
 
-    # Pad plaintext to a multiple of 16 bytes
     pad = 16 - len(plaintext) % 16
     plaintext = plaintext + pad * chr(pad)
 
-    cipher = AES.new(secret_key, mode, iv)
-
     encrypted = cipher.encrypt(plaintext.encode())
-    # Concatenate the IV and ciphertext
-    return base64.b64encode(iv + encrypted).decode()
 
+    if mode != AES.MODE_ECB:
+        return base64.b64encode(iv + encrypted).decode()
+    else:
+        return base64.b64encode(encrypted).decode()
 
 
 def decrypt(ciphertext, secret_key, mode):
@@ -26,14 +29,15 @@ def decrypt(ciphertext, secret_key, mode):
     except binascii.Error:
         print("Error: Could not decode ciphertext")
         return ""
-    # Extract the IV from the beginning of the decoded ciphertext
-    iv = decoded[:16]
-    cipher = AES.new(secret_key, mode, iv)
+    if mode == AES.MODE_ECB:
+        cipher = AES.new(secret_key, mode)
+    else:
+        iv = decoded[:16]
+        cipher = AES.new(secret_key, mode, iv)
 
     try:
-        # Decrypt the ciphertext
-        decrypted = cipher.decrypt(decoded[16:])
-        # Remove padding
+        decrypted = cipher.decrypt(decoded[16:]) if mode != AES.MODE_ECB else cipher.decrypt(decoded)
+        
         return decrypted[:-decrypted[-1]].decode()
     except UnicodeDecodeError:
         print("Error: Could not decode plaintext")
@@ -46,7 +50,6 @@ def decrypt(ciphertext, secret_key, mode):
 def main():
     plaintext = input("Enter plaintext: ")
 
-    # Secret key must be 16, 24, or 32 bytes long
     secret_key = input("Enter secret key: ").encode()
 
     mode = input("Select mode (ECB, CBC, CFB): ").upper()
@@ -89,7 +92,6 @@ def main():
 
         plaintext = decrypt(ciphertext, secret_key, mode)
         print("Plaintext:", plaintext)
-
 
 
 if __name__ == '__main__':
